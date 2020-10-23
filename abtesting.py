@@ -34,8 +34,10 @@ def get_avg(nums):
     :param nums: list of numbers
     :return: average of list
     '''
-    #TODO: fill me in!
-    pass
+    total = 0
+    for i in nums:
+      total += i
+    return total/len(nums)
 
 def get_stdev(nums):
     '''
@@ -43,8 +45,11 @@ def get_stdev(nums):
     :param nums: list of numbers
     :return: standard deviation of list
     '''
-    #TODO: fill me in!
-    pass
+    top = 0
+    average = get_avg(nums)
+    for i in nums:
+      top += pow((i - average), 2)
+    return pow(top/(len(nums) - 1), .5)
 
 def get_standard_error(a, b):
     '''
@@ -53,8 +58,9 @@ def get_standard_error(a, b):
     :param b: list of numbers
     :return: standard error of a and b (see studio 6 guide for this equation!)
     '''
-    #TODO: fill me in!
-    pass
+    a_half = pow(get_stdev(a), 2)/len(a)
+    b_half = pow(get_stdev(b), 2)/len(b)
+    return pow((a_half + b_half), .5)
 
 def get_2_sample_df(a, b):
     '''
@@ -64,8 +70,11 @@ def get_2_sample_df(a, b):
     :return: integer representing the degrees of freedom between a and b (see studio 6 guide for this equation!)
     HINT: you can use Math.round() to help you round!
     '''
-    #TODO: fill me in!
-    pass
+    top = pow(get_standard_error(a, b), 4)
+    bottom_a = pow((pow(get_stdev(a), 2) / len(a)), 2) / (len(a) - 1)
+    bottom_b = pow((pow(get_stdev(b), 2) / len(b)), 2) / (len(b) - 1)
+    return round(top / (bottom_a + bottom_b))
+
 
 def get_t_score(a, b):
     '''
@@ -74,8 +83,11 @@ def get_t_score(a, b):
     :param b: list of numbers
     :return: number representing the t-score given lists a and b (see studio 6 guide for this equation!)
     '''
-    #TODO: fill me in!
-    pass
+    t = (get_avg(a) - get_avg(b)) / get_standard_error(a, b)
+    if t > 0:
+      t = -t
+    return t
+
 
 def perform_2_sample_t_test(a, b):
     '''
@@ -86,8 +98,7 @@ def perform_2_sample_t_test(a, b):
     :return: calculated p-value
     HINT: the t_dist.cdf() function might come in handy!
     '''
-    #TODO: fill me in!
-    pass
+    return t_dist.cdf(get_t_score(a, b), get_2_sample_df(a, b))
 
 
 # [OPTIONAL] Some helper functions that might be helpful in get_expected_grid().
@@ -96,7 +107,31 @@ def perform_2_sample_t_test(a, b):
 # def total_sum(observed_grid):
 # def calculate_expected(row_sum, col_sum, tot_sum):
 
-def get_expected_grid(observed_grid):
+def row_sum(observed_grid, row):
+    total = 0
+    for i in observed_grid[row]:
+      total += i
+    return total
+
+def col_sum(observed_grid, col):
+    total = 0
+    for i in observed_grid:
+      total += i[col]
+    return total
+
+def total_sum(observed_grid):
+    total = 0
+    
+    for i in observed_grid:
+      for c in i:
+        total += c
+
+    return total
+
+def calculate_expected(row_sum, col_sum, tot_sum):
+    return (row_sum * col_sum) / tot_sum
+
+def get_expected_grid(grid):
     '''
     Calculates the expected counts, given the observed counts.
     ** DO NOT modify the parameter, observed_grid. **
@@ -104,8 +139,17 @@ def get_expected_grid(observed_grid):
     :return: 2D list of expected counts
     HINT: To clean up this calculation, consider filling in the optional helper functions below!
     '''
-    #TODO: fill me in!
-    pass
+    output = []
+    for i in range(0, len(grid)):
+      output.append([])
+    
+    for r in range(0, len(grid)):
+      for c in range(0, len(grid[r])):
+        output[r].append(calculate_expected(row_sum(grid, r), col_sum(grid, c), total_sum(grid)))
+    
+    return output
+
+      
 
 def df_chi2(observed_grid):
     '''
@@ -113,8 +157,7 @@ def df_chi2(observed_grid):
     :param observed_grid: 2D list of observed counts
     :return: degrees of freedom of expected counts (see studio 6 guide for this equation!)
     '''
-    #TODO: fill me in!
-    pass
+    return (len(observed_grid) - 1) * (len(observed_grid[0]) - 1)
 
 def chi2_value(observed_grid):
     '''
@@ -122,8 +165,15 @@ def chi2_value(observed_grid):
     :param observed_grid: 2D list of observed counts
     :return: associated chi^2 value of expected counts (see studio 6 guide for this equation!)
     '''
-    #TODO: fill me in!
-    pass
+    expected_grid = get_expected_grid(observed_grid)
+    total = 0
+
+    for r in range(0, len(observed_grid)):
+      for c in range(0, len(observed_grid[r])):
+        total += pow((observed_grid[r][c] - expected_grid[r][c]), 2) / expected_grid[r][c]
+
+    return total
+
 
 def perform_chi2_homogeneity_test(observed_grid):
     '''
@@ -133,8 +183,7 @@ def perform_chi2_homogeneity_test(observed_grid):
     :return: calculated p-value
     HINT: the chi2.cdf() function might come in handy!
     '''
-    #TODO: fill me in!
-    pass
+    return 1 - chi2.cdf(chi2_value(observed_grid), df_chi2(observed_grid))
 
 # These commented out lines are for testing your main functions. 
 # Please uncomment them when finished with your implementation and confirm you get the same values :)
@@ -147,7 +196,7 @@ def data_to_num_list(s):
     '''
   return list(map(float, s.split()))
 
-"""
+
 # t_test 1:
 a_t1_list = data_to_num_list(a1) 
 b_t1_list = data_to_num_list(b1)
@@ -190,6 +239,3 @@ b_c3_list = data_to_num_list(b_count_3)
 c3_observed_grid = [a_c3_list, b_c3_list]
 print(chi2_value(c3_observed_grid)) # this should be .3119402
 print(perform_chi2_homogeneity_test(c3_observed_grid)) # this should be .57649202
-"""
-
-
